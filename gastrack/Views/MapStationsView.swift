@@ -159,14 +159,22 @@ struct MapStationsView: View {
             guard !isLoading else { return }
             isLoading = true
             do {
-                try await store.loadNearby(region.center, radiusKm: max(latSpan, lngSpan) * 111 / 2, api: api)
+                let radiusKm = max(latSpan, lngSpan) * 111 / 2
+                let results = try await api.fetchNearby(lat: region.center.latitude, lng: region.center.longitude, radiusKm: radiusKm)
+                store.merge(results)
                 stations = store.stations(in: region)
             } catch {
                 self.error = error.localizedDescription
             }
             isLoading = false
         } else {
-            await store.loadBbox(region, api: api)
+            let minLat = region.center.latitude - latSpan / 2
+            let maxLat = region.center.latitude + latSpan / 2
+            let minLng = region.center.longitude - lngSpan / 2
+            let maxLng = region.center.longitude + lngSpan / 2
+            if let results = try? await api.fetchBbox(minLat: minLat, minLng: minLng, maxLat: maxLat, maxLng: maxLng) {
+                store.merge(results)
+            }
             stations = store.stations(in: region)
         }
     }

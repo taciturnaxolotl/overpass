@@ -71,7 +71,9 @@ struct NearbyView: View {
             return
         }
         error = nil
-        try? await store.loadNearby(coord, radiusKm: radiusKm, api: api, cacheOnly: true)
+        if let results = try? await api.fetchNearby(lat: coord.latitude, lng: coord.longitude, radiusKm: radiusKm, cacheOnly: true) {
+            store.merge(results)
+        }
     }
 
     // Live — may call GasBuddy if cell is stale.
@@ -80,7 +82,8 @@ struct NearbyView: View {
         error = nil
         isRefreshing = true
         do {
-            try await store.loadNearby(coord, radiusKm: radiusKm, api: api)
+            let results = try await api.fetchNearby(lat: coord.latitude, lng: coord.longitude, radiusKm: radiusKm)
+            store.merge(results)
         } catch {
             if stations.isEmpty { self.error = error.localizedDescription }
         }

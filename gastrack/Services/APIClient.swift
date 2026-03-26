@@ -75,6 +75,10 @@ final class APIClient: ObservableObject {
         return try await get(comps.url!)
     }
 
+    func fetchHealth() async throws -> HealthResponse {
+        return try await get(try endpoint("/health"))
+    }
+
     func fetchEIAAverages() async throws -> [EIAAverage] {
         return try await get(try endpoint("/eia/averages"))
     }

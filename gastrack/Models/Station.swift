@@ -13,7 +13,7 @@ struct Price: Codable, Identifiable {
     }
 }
 
-struct Station: Codable, Identifiable {
+struct Station: Codable, Identifiable, Sendable {
     let id: String
     let name: String
     let lat: Double
@@ -32,6 +32,20 @@ struct Station: Codable, Identifiable {
     var isStale: Bool {
         let ageMs = Int64(Date().timeIntervalSince1970 * 1000) - fetchedAt
         return ageMs > 6 * 60 * 60 * 1000
+    }
+}
+
+struct HealthResponse: Codable {
+    let ok: Bool
+    let cachedStations: Int
+    let oldestFetch: String?
+    let newestFetch: String?
+
+    enum CodingKeys: String, CodingKey {
+        case ok
+        case cachedStations = "cached_stations"
+        case oldestFetch = "oldest_fetch"
+        case newestFetch = "newest_fetch"
     }
 }
 

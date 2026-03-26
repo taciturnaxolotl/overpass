@@ -23,6 +23,7 @@
 		0B5E3B5E2F75C0B6005F7F70 /* gas.icon in Resources */ = {isa = PBXBuildFile; fileRef = 0B5E3B5D2F75C0B6005F7F70 /* gas.icon */; };
 		0B5E3B602F75C0F1005F7F70 /* StationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B5E3B5F2F75C0F1005F7F70 /* StationStore.swift */; };
 		0B5E3B622F75C40F005F7F70 /* PrefetchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B5E3B612F75C40F005F7F70 /* PrefetchView.swift */; };
+		0B5E3B6A2F75F12D005F7F70 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 0B5E3B692F75F12D005F7F70 /* GRDB */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +51,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B5E3B6A2F75F12D005F7F70 /* GRDB in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,6 +122,7 @@
 			);
 			name = gastrack;
 			packageProductDependencies = (
+				0B5E3B692F75F12D005F7F70 /* GRDB */,
 			);
 			productName = gastrack;
 			productReference = 0B5E3B432F75ACFB005F7F70 /* gastrack.app */;
@@ -149,6 +152,9 @@
 			);
 			mainGroup = 0B5E3B2C2F75ACD9005F7F70;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0B5E3B682F75F12D005F7F70 /* XCRemoteSwiftPackageReference "GRDB" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0B5E3B2C2F75ACD9005F7F70;
 			projectDirPath = "";
@@ -409,6 +415,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0B5E3B682F75F12D005F7F70 /* XCRemoteSwiftPackageReference "GRDB" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0B5E3B692F75F12D005F7F70 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0B5E3B682F75F12D005F7F70 /* XCRemoteSwiftPackageReference "GRDB" */;
+			productName = GRDB;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0B5E3B2D2F75ACD9005F7F70 /* Project object */;
 }
