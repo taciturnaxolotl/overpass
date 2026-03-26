@@ -1,4 +1,4 @@
-import { err, json, requireApiKey } from "../auth.ts";
+import { err, json, requireApiKey, requireApiKeyNoRateLimit } from "../auth.ts";
 import {
 	isCellFresh,
 	markCellFetched,
@@ -13,10 +13,11 @@ const NEARBY_TTL_MS = 30 * 60 * 1000; // 30 minutes
 const MAX_BBOX_AREA = 0.5;
 
 export async function handleNearby(req: Request): Promise<Response> {
-	const authErr = requireApiKey(req);
+	const url = new URL(req.url);
+	const cacheOnly = url.searchParams.get("cache_only") === "true";
+	const authErr = cacheOnly ? requireApiKeyNoRateLimit(req) : requireApiKey(req);
 	if (authErr) return authErr;
 
-	const url = new URL(req.url);
 	const lat = parseFloat(url.searchParams.get("lat") ?? "");
 	const lng = parseFloat(url.searchParams.get("lng") ?? "");
 	const radiusKm = parseFloat(url.searchParams.get("radius_km") ?? "8");
@@ -38,11 +39,10 @@ export async function handleNearby(req: Request): Promise<Response> {
 			400,
 		);
 	}
-
 	const cellKey = latLngToCell(lat, lng);
 
-	// Serve from cache if fresh
-	if (!isCellFresh(cellKey, NEARBY_TTL_MS)) {
+	// Serve from cache if fresh or cache_only requested
+	if (!cacheOnly && !isCellFresh(cellKey, NEARBY_TTL_MS)) {
 		try {
 			const stations = await fetchStationsByLocation(lat, lng);
 			upsertStations(stations);
@@ -58,7 +58,7 @@ export async function handleNearby(req: Request): Promise<Response> {
 }
 
 export async function handleBbox(req: Request): Promise<Response> {
-	const authErr = requireApiKey(req);
+	const authErr = requireApiKeyNoRateLimit(req);
 	if (authErr) return authErr;
 
 	const url = new URL(req.url);

@@ -21,7 +21,12 @@ export function requireDeviceSecret(request: Request): Response | null {
 		console.error("GASTRACK_DEVICE_SECRET not set");
 		return err("Server misconfigured", 500);
 	}
-	if (token !== secret) return err("Unauthorized", 401);
+	if (token !== secret) {
+		console.error(
+			`Auth mismatch — got: "${token?.slice(0, 6)}…" expected: "${secret.slice(0, 6)}…"`,
+		);
+		return err("Unauthorized", 401);
+	}
 	return null;
 }
 
@@ -30,5 +35,13 @@ export function requireApiKey(request: Request): Response | null {
 	if (!token) return err("Missing Authorization header", 401);
 	if (!lookupApiKey(token)) return err("Invalid API key", 401);
 	if (!checkRateLimit(token)) return err("Rate limit exceeded", 429);
+	return null;
+}
+
+// Auth-only, no rate limit. Use for cache-only endpoints that never call upstream APIs.
+export function requireApiKeyNoRateLimit(request: Request): Response | null {
+	const token = bearerToken(request);
+	if (!token) return err("Missing Authorization header", 401);
+	if (!lookupApiKey(token)) return err("Invalid API key", 401);
 	return null;
 }

@@ -79,6 +79,13 @@ function migrate(db: Database): void {
       count  INTEGER DEFAULT 0,
       PRIMARY KEY (key, window)
     );
+
+    CREATE TABLE IF NOT EXISTS eia_averages (
+      state      TEXT PRIMARY KEY,
+      regular    REAL,
+      period     TEXT NOT NULL,
+      fetched_at INTEGER NOT NULL
+    );
   `);
 }
 
@@ -227,7 +234,7 @@ export function checkRateLimit(key: string): boolean {
 	const db = getDb();
 	const now = Date.now();
 	const currentWindow = Math.floor(now / 60_000);
-	const cutoff = currentWindow - 60; // last 60 minute buckets
+	const cutoff = currentWindow - 15; // last 15 minute buckets
 
 	// Lazily expire old buckets
 	db.run(
@@ -249,5 +256,49 @@ export function checkRateLimit(key: string): boolean {
 		)
 		.get(key, cutoff);
 
-	return (row?.total ?? 0) <= 60;
+	return (row?.total ?? 0) <= 300;
+}
+
+const EIA_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 1 week
+
+export interface EIAAverage {
+	state: string;
+	regular: number | null;
+	period: string;
+	fetchedAt: number;
+}
+
+export function getEIAAverages(): EIAAverage[] {
+	const db = getDb();
+	return db
+		.query<
+			{ state: string; regular: number | null; period: string; fetched_at: number },
+			[]
+		>("SELECT state, regular, period, fetched_at FROM eia_averages")
+		.all()
+		.map((r) => ({ state: r.state, regular: r.regular, period: r.period, fetchedAt: r.fetched_at }));
+}
+
+export function areEIAAveragesFresh(): boolean {
+	const db = getDb();
+	const row = db
+		.query<{ fetched_at: number }, []>(
+			"SELECT MIN(fetched_at) as fetched_at FROM eia_averages",
+		)
+		.get();
+	if (!row?.fetched_at) return false;
+	return Date.now() - row.fetched_at < EIA_TTL_MS;
+}
+
+export function upsertEIAAverages(averages: EIAAverage[]): void {
+	const db = getDb();
+	const stmt = db.prepare(
+		"INSERT OR REPLACE INTO eia_averages (state, regular, period, fetched_at) VALUES ($state, $regular, $period, $fetched_at)",
+	);
+	const upsertMany = db.transaction((rows: EIAAverage[]) => {
+		for (const a of rows) {
+			stmt.run({ $state: a.state, $regular: a.regular, $period: a.period, $fetched_at: a.fetchedAt });
+		}
+	});
+	upsertMany(averages);
 }

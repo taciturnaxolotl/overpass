@@ -2,6 +2,7 @@ import { err, json, requireDeviceSecret } from "../auth.ts";
 import { createApiKey } from "../db.ts";
 
 export async function handleRegisterKey(req: Request): Promise<Response> {
+	console.log("POST /keys/register — Authorization:", req.headers.get("Authorization")?.slice(0, 12) ?? "(none)");
 	const authErr = requireDeviceSecret(req);
 	if (authErr) return authErr;
 
