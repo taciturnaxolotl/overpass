@@ -79,7 +79,7 @@ struct MapStationsView: View {
                             }
                         }
                 }
-                .presentationDetents([.medium])
+                .presentationDetents([.medium, .large])
             }
         }
         .onAppear {

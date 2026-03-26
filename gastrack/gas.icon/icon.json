@@ -7,10 +7,10 @@
           "image-name" : "emoji_u26fd.svg",
           "name" : "emoji_u26fd",
           "position" : {
-            "scale" : 6,
+            "scale" : 5.2,
             "translation-in-points" : [
-              -0.8993379128923493,
-              1.751700357341747
+              -0.6745034346692478,
+              1.3137752680064523
             ]
           }
         }

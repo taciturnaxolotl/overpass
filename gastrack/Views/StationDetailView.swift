@@ -1,55 +1,101 @@
 import SwiftUI
 import MapKit
+import CoreLocation
 
 struct StationDetailView: View {
     let station: Station
     @EnvironmentObject private var eia: EIAService
+    @StateObject private var location = LocationManager.shared
+
+    private var otherPrices: [Price] {
+        station.prices.filter { $0.nickname != "Regular" && $0.formattedPrice != nil }
+    }
 
     var body: some View {
         List {
+            // ── Hero: regular price ──
             Section {
-                Button {
-                    openInMaps()
-                } label: {
-                    VStack(alignment: .leading, spacing: 3) {
-                        if let address = station.address {
-                            Text(address)
+                VStack(spacing: 6) {
+                    if let regular = station.regularPrice, let fp = regular.formattedPrice {
+                        Text(fp)
+                            .font(.system(size: 64, weight: .bold, design: .rounded))
+                            .foregroundStyle(.primary)
+                        Text("Regular")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        if let dev = eia.deviation(for: station) {
+                            Text(deviationLabel(dev))
+                                .font(.callout.bold())
+                                .foregroundStyle(dev < 0 ? .green : .red)
+                                .padding(.top, 2)
                         }
-                        if let city = station.city, let state = station.state {
-                            Text("\(city), \(state) \(station.zip ?? "")".trimmingCharacters(in: .whitespaces))
-                                .foregroundStyle(.secondary)
-                        }
+                    } else {
+                        Text("No price reported")
+                            .font(.title2)
+                            .foregroundStyle(.secondary)
                     }
-                    .font(.subheadline)
                 }
-                .foregroundStyle(.primary)
-            } header: {
-                Label("Location", systemImage: "mappin")
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
             }
 
-            Section {
-                ForEach(station.prices) { price in
-                    HStack {
-                        Text(price.nickname)
-                        Spacer()
-                        VStack(alignment: .trailing, spacing: 2) {
-                            if let fp = price.formattedPrice {
-                                Text(fp)
-                            } else {
-                                Text("Not reported").foregroundStyle(.secondary)
-                            }
-                            if price.nickname == "Regular", let dev = eia.deviation(for: station) {
-                                Text(deviationLabel(dev))
-                                    .font(.caption2.bold())
-                                    .foregroundStyle(dev < 0 ? .green : .red)
-                            }
+            // ── Other fuel prices ──
+            if !otherPrices.isEmpty {
+                Section {
+                    ForEach(otherPrices) { price in
+                        HStack {
+                            Text(price.nickname)
+                                .font(.subheadline)
+                            Spacer()
+                            Text(price.formattedPrice!)
+                                .font(.subheadline.bold())
                         }
                     }
                 }
-            } header: {
-                Text("Prices")
+            }
+
+            // ── Map + address ──
+            let date = Date(timeIntervalSince1970: Double(station.fetchedAt) / 1000)
+            Section {
+                Map(initialPosition: .region(MKCoordinateRegion(
+                    center: CLLocationCoordinate2D(latitude: station.lat, longitude: station.lng),
+                    latitudinalMeters: 400, longitudinalMeters: 400
+                ))) {
+                    Marker(station.name, coordinate: CLLocationCoordinate2D(latitude: station.lat, longitude: station.lng))
+                }
+                .allowsHitTesting(false)
+                .frame(height: 160)
+                .listRowInsets(.init())
+
+                Button(action: openInMaps) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "mappin.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(.red)
+                        VStack(alignment: .leading, spacing: 2) {
+                            if let address = station.address {
+                                Text(address)
+                            }
+                            if let city = station.city, let state = station.state {
+                                Text("\(city), \(state) \(station.zip ?? "")".trimmingCharacters(in: .whitespaces))
+                                    .foregroundStyle(.secondary)
+                            }
+                            if let dist = distanceMiles {
+                                Text(dist)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.bold())
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
             } footer: {
-                let date = Date(timeIntervalSince1970: Double(station.fetchedAt) / 1000)
                 HStack(spacing: 6) {
                     Text("Fetched \(date.formatted(.relative(presentation: .named)))")
                     if station.isStale {
@@ -63,11 +109,18 @@ struct StationDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
+    private var distanceMiles: String? {
+        guard let loc = location.location else { return nil }
+        let meters = loc.distance(from: CLLocation(latitude: station.lat, longitude: station.lng))
+        let miles = meters / 1609.34
+        return miles < 10 ? String(format: "%.1f mi away", miles) : String(format: "%.0f mi away", miles)
+    }
+
     private func openInMaps() {
         let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: station.lat, longitude: station.lng))
-        let mapItem = MKMapItem(placemark: placemark)
-        mapItem.name = station.name
-        mapItem.openInMaps()
+        let item = MKMapItem(placemark: placemark)
+        item.name = station.name
+        item.openInMaps()
     }
 
     private func deviationLabel(_ dev: Double) -> String {
