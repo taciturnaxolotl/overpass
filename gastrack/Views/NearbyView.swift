@@ -15,7 +15,7 @@ struct NearbyView: View {
     @AppStorage("balance_mpg") private var balanceMpg: Double = 28
     @AppStorage("balance_tank") private var balanceTank: Double = 12
     @State private var error: String?
-    @State private var sortMode: SortMode = .closest
+    @State private var sortMode: SortMode = .balanced
     @State private var displayedStations: [Station] = []
 
     private let radiusKm = 16.0
