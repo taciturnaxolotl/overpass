@@ -159,11 +159,11 @@ struct PrefetchView: View {
         guard route == nil else { return }
         if toLatSaved != 0 && toLngSaved != 0 {
             let toCoord = CLLocationCoordinate2D(latitude: toLatSaved, longitude: toLngSaved)
-            toItem = MKMapItem(placemark: MKPlacemark(coordinate: toCoord))
+            toItem = MKMapItem(location: CLLocation(latitude: toCoord.latitude, longitude: toCoord.longitude), address: nil)
         }
         if fromLatSaved != 0 && fromLngSaved != 0 {
             let fromCoord = CLLocationCoordinate2D(latitude: fromLatSaved, longitude: fromLngSaved)
-            fromItem = MKMapItem(placemark: MKPlacemark(coordinate: fromCoord))
+            fromItem = MKMapItem(location: CLLocation(latitude: fromCoord.latitude, longitude: fromCoord.longitude), address: nil)
         }
         if toItem != nil { await fetchRoute() }
     }
@@ -224,7 +224,7 @@ struct PrefetchView: View {
         Task {
             let req = MKLocalSearch.Request(completion: completion)
             guard let item = try? await MKLocalSearch(request: req).start().mapItems.first else { return }
-            let coord = item.placemark.coordinate
+            let coord = item.location.coordinate
             if field == .from {
                 fromText = completion.title
                 fromItem = item

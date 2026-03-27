@@ -105,7 +105,7 @@ final class StationStore: ObservableObject {
     }
 
     func clear() {
-        try? db.write { try Station.deleteAll($0) }
+        _ = try? db.write { try Station.deleteAll($0) }
         byId = [:]
     }
 

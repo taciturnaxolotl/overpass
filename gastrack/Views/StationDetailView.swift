@@ -117,8 +117,7 @@ struct StationDetailView: View {
     }
 
     private func openInMaps() {
-        let placemark = MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: station.lat, longitude: station.lng))
-        let item = MKMapItem(placemark: placemark)
+        let item = MKMapItem(location: CLLocation(latitude: station.lat, longitude: station.lng), address: nil)
         item.name = station.name
         item.openInMaps()
     }

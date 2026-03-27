@@ -7,25 +7,35 @@ import MapKit
 // to trigger the full GPU pipeline during the system's own launch sequence.
 final class AppDelegate: NSObject, UIApplicationDelegate {
     private var prewarmWindow: UIWindow?
+    private var sceneObserver: NSObjectProtocol?
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        let screen = UIScreen.main.bounds
-        let map = MKMapView(frame: screen)
+        // Defer until the first window scene activates to use scene-based UIWindow(windowScene:).
+        sceneObserver = NotificationCenter.default.addObserver(
+            forName: UIScene.didActivateNotification, object: nil, queue: .main
+        ) { [weak self] notification in
+            guard let self, let windowScene = notification.object as? UIWindowScene else { return }
+            if let obs = sceneObserver { NotificationCenter.default.removeObserver(obs) }
+            sceneObserver = nil
+            setupPrewarm(windowScene: windowScene)
+        }
+        return true
+    }
 
+    private func setupPrewarm(windowScene: UIWindowScene) {
+        let bounds = windowScene.screen.bounds
+        let map = MKMapView(frame: bounds)
         let vc = UIViewController()
-        vc.view.frame = screen
+        vc.view.frame = bounds
         vc.view.addSubview(map)
-
-        let window = UIWindow(frame: screen)
+        let window = UIWindow(windowScene: windowScene)
         window.rootViewController = vc
         window.windowLevel = UIWindow.Level(rawValue: -1)
-        window.alpha = 0.01   // > 0 so Metal renders; imperceptible to users
+        window.alpha = 0.01
         window.isHidden = false
-
         prewarmWindow = window
         NativeMapView.prewarmedView = map
-        return true
     }
 
     // Called from NativeMapView.makeUIView once the map is consumed.
