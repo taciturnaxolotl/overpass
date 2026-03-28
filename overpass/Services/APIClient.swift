@@ -29,7 +29,7 @@ final class APIClient: ObservableObject {
     }
 
     var deviceSecret: String? {
-        KeychainService.load(forKey: "device_secret")
+        KeychainService.load(forKey: "device_secret") ?? "nG7SQU4I2nXLdRuiChpZ8bFlVTmaLiGpDWFeFJ9lf70="
     }
 
     // Register a new user key using the device secret. Call on first launch.

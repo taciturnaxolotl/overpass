@@ -92,10 +92,12 @@ final class StoreManager {
         defer { isPurchasing = false }
         let result = try await product.purchase()
         if case .success(let verification) = result,
-           case .verified(_) = verification {
+           case .verified(let tx) = verification {
             isUnlocked = true
+            purchaseDate = tx.purchaseDate
             justPurchased = true
             Task { try? await Task.sleep(for: .seconds(4)); justPurchased = false }
+            await tx.finish()
         }
     }
 

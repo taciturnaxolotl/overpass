@@ -67,6 +67,9 @@ struct overpassApp: App {
                 .task {
                     LocationManager.shared.requestPermission()
                     LocationManager.shared.startUpdating()
+                    if api.userKey == nil, api.deviceSecret != nil {
+                        try? await api.registerKey()
+                    }
                     await eia.load(api: api)
                     await storeManager.load()
                 }
