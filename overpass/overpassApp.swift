@@ -52,6 +52,7 @@ struct overpassApp: App {
     @StateObject private var eia = EIAService.shared
     @StateObject private var store = StationStore.shared
     @StateObject private var routeStore = RouteStore.shared
+    private let storeManager = StoreManager.shared
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
@@ -61,7 +62,16 @@ struct overpassApp: App {
                 .environmentObject(eia)
                 .environmentObject(store)
                 .environmentObject(routeStore)
-                .task { await eia.load(api: api) }
+                .task {
+                    await eia.load(api: api)
+                    await storeManager.load()
+                }
+                .fullScreenCover(isPresented: .init(
+                    get: { !storeManager.hasAccess },
+                    set: { _ in }
+                )) {
+                    PaywallView()
+                }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
