@@ -65,6 +65,8 @@ struct overpassApp: App {
                 .environmentObject(store)
                 .environmentObject(routeStore)
                 .task {
+                    LocationManager.shared.requestPermission()
+                    LocationManager.shared.startUpdating()
                     await eia.load(api: api)
                     await storeManager.load()
                 }

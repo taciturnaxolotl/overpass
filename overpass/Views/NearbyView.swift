@@ -88,9 +88,6 @@ struct NearbyView: View {
         .onChange(of: store.byId.count) { _, _ in recompute() }
         .onChange(of: sortMode) { _, _ in recompute() }
         .onAppear {
-            if location.authorizationStatus == .notDetermined {
-                location.requestPermission()
-            }
             location.startUpdating()
         }
     }
