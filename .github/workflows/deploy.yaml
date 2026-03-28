@@ -1,4 +1,4 @@
-name: Deploy Gastrack
+name: Deploy Overpass
 
 on:
   push:
@@ -14,9 +14,9 @@ jobs:
   deploy:
     uses: taciturnaxolotl/dots/.github/workflows/deploy-service.yml@main
     with:
-      service: gastrack
-      health_url: https://gastrack.dunkirk.sh/health
-      db_path: /var/lib/gastrack/data/gastrack.db
+      service: overpass
+      health_url: https://overpass.dunkirk.sh/health
+      db_path: /var/lib/overpass/data/overpass.db
       work_dir: api
     secrets:
       TS_OAUTH_CLIENT_ID: ${{ secrets.TS_OAUTH_CLIENT_ID }}
